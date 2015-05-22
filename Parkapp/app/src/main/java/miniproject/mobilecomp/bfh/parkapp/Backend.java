@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.location.Location;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 
 import com.baasbox.android.BaasBox;
 import com.baasbox.android.BaasDocument;
@@ -16,6 +17,8 @@ import com.baasbox.android.RequestToken;
 import com.baasbox.android.json.JsonArray;
 import com.baasbox.android.json.JsonObject;
 import com.baasbox.android.net.HttpRequest;
+
+import org.apache.http.message.BasicNameValuePair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,16 +34,16 @@ public class Backend extends Application {
         username = "admin",
         pw = "mobile15";
 
-   private  RequestToken token;
+    private FrontViewController a;
 
+    private  RequestToken token;
+    private RequestToken mRefresh;
     private void login(){
 
 
         BaasUser user= BaasUser.withUserName(username);
         user.setPassword(pw);
         token = user.login(onComplete);
-
-
     }
 
     private final BaasHandler<BaasUser> onComplete =
@@ -57,9 +60,9 @@ public class Backend extends Application {
                 }
             };
 
-    public List<Location> getLocationsNear(Location location,Activity a){
+    public void getLocationsNear(Location location,FrontViewController a){
 
-        final List<Location> locations = new ArrayList<Location>();
+        this.a=a;
 
 
         BaasHandler handler = new BaasHandler<List<BaasDocument>>() {
@@ -68,13 +71,11 @@ public class Backend extends Application {
                 if(listBaasResult.isSuccess())
                     for(BaasDocument doc:listBaasResult.value()) {
 
-                        JsonObject jo = doc.getObject(Location.class.getName());
-                        Location l = new Location("baaslocation");
-                        l.setLatitude(jo.getDouble("latitude"));
-                        l.setLongitude(jo.getDouble("longitude"));
-                        l.setLongitude(jo.getDouble("name"));
-                        locations.add(l);
-                        Log.d("WIN", "FOOBAR", listBaasResult.error());
+                        Backend.this.a.addString(doc.getString("name"));
+                        Backend.this.a.addString(doc.getString("latitude"));
+                        Backend.this.a.addString(doc.getString("longitude"));
+                        Log.d("latitude", doc.getString("latitude"), listBaasResult.error());
+
                     }
                 else
                     Log.d("ERROR", "FOOBAR", listBaasResult.error());
@@ -94,14 +95,17 @@ public class Backend extends Application {
 
 
 
-        client.rest(HttpRequest.GET,
+        token = mRefresh =BaasDocument.fetchAll("group-gerber",handler);
+
+
+
+       /* client.rest(HttpRequest.GET,
                 "distance(latitude,longitude,"+location.getLatitude()+"," +location.getLongitude()+" < 5000",
                 new JsonArray(),
                 true,
                 handler
-           );
+           );*/
 
-        return locations;
     }
 
 }

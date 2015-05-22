@@ -18,13 +18,14 @@ public class FrontViewController extends Activity {
 
     private TextView currentLocationTv;
     private ListView locationList;
-
+    private List<String> strList=new ArrayList<>();
+    private ArrayAdapter<String> adapter;
     @Override
     protected void onStart(){
         super.onStart();
-
+        adapter= new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_item,strList);
         Location location = getCurrentLocation();
-        List<Location> locations;
+        List<String> locations;
 
         //load xml layout file
         setContentView(R.layout.frontview);
@@ -34,21 +35,15 @@ public class FrontViewController extends Activity {
         currentLocationTv.append("\n"+location.toString());
 
         locationList=(ListView)findViewById(R.id.locationlist);
-        List<String> strList=new ArrayList<>();
 
-        ArrayAdapter<String> adapter= new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_item,strList);
+
 
         locationList.setAdapter(adapter);
 
         Backend back= new Backend();
-        locations = back.getLocationsNear(location,this);
+        back.getLocationsNear(location,this);
 
-        for(Location l: locations){
-            Double alt = l.getAltitude(),
-                lon = l.getLongitude();
-            strList.add("location lon "+lon +" alt "+alt);
-            adapter.notifyDataSetChanged();
-        }
+
 
     }
 
@@ -65,5 +60,20 @@ public class FrontViewController extends Activity {
         }
 
         return location;
+    }
+
+    public void addString(String s){
+
+
+        strList.add(s);
+        adapter=new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_item,strList);
+        adapter.notifyDataSetChanged();
+    }
+
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        this.onStart();
     }
  }
